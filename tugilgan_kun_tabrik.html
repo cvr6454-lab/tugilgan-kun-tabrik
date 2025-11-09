@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tug'ilgan kun muborak!</title>
+  <style>
+    :root{--bg:#f7f4ef;--card:#ffffff;--accent:#e7c07a}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial}
+    body{background:linear-gradient(180deg,#fbf9f6, #f0ebe3);display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{width:100%;max-width:760px;background:var(--card);border-radius:18px;box-shadow:0 8px 30px rgba(18,20,22,0.08);overflow:hidden;display:grid;grid-template-columns:1fr 420px}
+    .left{padding:36px 32px;display:flex;flex-direction:column;gap:18px}
+    .title{font-size:28px;font-weight:700;color:#222}
+    .subtitle{color:#555;font-size:15px;line-height:1.5}
+    .message{margin-top:8px;background:linear-gradient(180deg, rgba(231,192,122,0.12), rgba(231,192,122,0.04));padding:14px;border-radius:10px;border:1px solid rgba(0,0,0,0.04)}
+    .btns{display:flex;gap:10px;margin-top:10px}
+    .btn{background:var(--accent);border:none;padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer}
+    .photo-wrap{background:#f5efe6;padding:18px;display:flex;align-items:center;justify-content:center}
+    .photo{width:100%;height:100%;max-height:560px;object-fit:cover;border-left:1px solid rgba(0,0,0,0.04)}
+    .footer{font-size:13px;color:#888;margin-top:6px}
+    /* mobile */
+    @media (max-width:900px){.card{grid-template-columns:1fr;max-width:420px}.photo{max-height:320px}.left{padding:20px}}
+    /* confetti */
+    canvas.confetti{position:fixed;left:0;top:0;pointer-events:none;z-index:9999}
+  </style>
+</head>
+<body>
+  <canvas class="confetti"></canvas>
+  <div class="card" role="main">
+    <div class="left">
+      <div>
+        <div class="title">Tug'ilgan kuning bilan, <span id="nameDisplay">Aziz singlim</span> 🎉</div>
+        <div class="subtitle">Bugun sening maxsus kuning — do'stlaring va oilang seni tabriklaydi. Mana bu kichik sahifa faqat sen uchun tayyorlandi.</div>
+      </div>
+
+      <div class="message" id="messageBox">
+        <strong>Tabrik:</strong>
+        <p id="messageText">Sening 17 yoshga to'lishing bilan chin qalbimdan tabriklayman! Kelajakda barcha orzularing amalga oshsin, har kuni quvonch va omadga to'lsin. Seni juda yaxshi ko'raman!</p>
+      </div>
+
+      <div class="btns">
+        <button class="btn" id="playConfetti">Konfetni o‘ynat</button>
+        <button class="btn" id="surpriseBtn">Sovg'ani ko‘rsat</button>
+      </div>
+
+      <div class="footer">Agar rasmni almashtirmoqchi bo'lsangiz, <code>portrait.jpg</code> faylini yuklang yoki HTML ichidagi <code>IMAGE_URL</code> manzilini o'zgartiring.</div>
+    </div>
+
+    <div class="photo-wrap">
+      <!-- Replace IMAGE_URL with your actual image filename or full URL (e.g. portrait.jpg or https://.../portrait.jpg) -->
+      <img id="portrait" class="photo" src="IMAGE_URL" alt="Singilning rasmi" />
+    </div>
+  </div>
+
+  <script>
+    // --- Simple confetti ---
+    const canvas = document.querySelector('canvas.confetti');
+    const ctx = canvas.getContext('2d');
+    let W = canvas.width = window.innerWidth;
+    let H = canvas.height = window.innerHeight;
+    window.addEventListener('resize', ()=>{W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight});
+
+    function random(min,max){return Math.random()*(max-min)+min}
+    function makeConfetti(){
+      const conf = [];
+      for(let i=0;i<120;i++){
+        conf.push({x:random(0,W),y:random(-H,0),r:random(6,12),d:random(2,6),c:['#e7717d','#f3c969','#7bd389','#7cc7f5'][Math.floor(random(0,4))],rot:random(0,360)})
+      }
+      return conf
+    }
+    let confetti = [];
+    function startConfetti(){confetti = makeConfetti(); if(!looping) loop();}
+    function stopConfetti(){confetti=[]}
+
+    let looping=false;
+    function loop(){looping=true;ctx.clearRect(0,0,W,H);for(let p of confetti){ctx.save();ctx.fillStyle=p.c;ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6);ctx.restore();p.y+=p.d; p.x+=Math.sin(p.y/20); p.rot+=0.8; if(p.y>H+20)p.y=-10; } requestAnimationFrame(loop)}
+
+    document.getElementById('playConfetti').addEventListener('click', ()=>{startConfetti(); setTimeout(()=>{stopConfetti();},5000)})
+
+    // --- Surprise button (shows alert or extra message) ---
+    document.getElementById('surpriseBtn').addEventListener('click', ()=>{
+      const extra = document.createElement('div');
+      extra.style.marginTop='12px'; extra.style.padding='12px'; extra.style.borderRadius='10px'; extra.style.background='linear-gradient(90deg, rgba(231,192,122,0.12), rgba(231,192,122,0.06))';
+      extra.innerHTML = '<strong>Sovgʻa:</strong> Sen uchun kichik video yoki rasm to‘plamini hozir yuboramiz — bayraming muborak! ❤️';
+      document.querySelector('.left').appendChild(extra);
+      startConfetti(); setTimeout(()=>stopConfetti(),5000)
+    })
+
+    // --- Simple query params to personalize the page ---
+    // Example use: https://.../tugilgan-kun-tabrik.html?name=Aziza&message=Sen%20eng%20zo'r%20qizing
+    function getParams(){const p={};location.search.substring(1).split('&').forEach(s=>{if(!s) return; const [k,v]=s.split('='); p[decodeURIComponent(k)]=decodeURIComponent((v||'').replace(/\+/g,' '))}); return p}
+    const params = getParams();
+    if(params.name) document.getElementById('nameDisplay').textContent = params.name;
+    if(params.message) document.getElementById('messageText').textContent = params.message;
+    if(params.image) document.getElementById('portrait').src = params.image;
+
+    // Accessibility: if image fails to load, show placeholder text
+    document.getElementById('portrait').addEventListener('error', ()=>{
+      document.getElementById('portrait').style.display='none';
+      const alt = document.createElement('div'); alt.textContent='Rasm yuklanmadi — iltimos IMAGE_URL o‘rnini tekshiring.'; alt.style.color='#666'; alt.style.fontSize='15px'; alt.style.padding='24px'; document.querySelector('.photo-wrap').appendChild(alt);
+    })
+  </script>
+</body>
+</html>
